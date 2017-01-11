@@ -1,0 +1,29 @@
+div.main {
+	width: 800px;
+	margin: auto;
+}
+
+div.indicator {
+	text-align: right;
+	height: 26px;
+}
+
+span.connection_status {
+	color: gray;
+}
+
+div.notification {
+	margin: 10px;
+}
+
+div.msg_success {
+	color: green;
+}
+
+div.msg_error {
+	color: red;
+}
+
+table.reporting tr td {
+	padding-left: 20px;
+}

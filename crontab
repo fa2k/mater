@@ -1,0 +1,3 @@
+0       12      *       *       *       /usr/bin/python /home/poppetode/mainten$
+@reboot /usr/bin/python /home/poppetode/maintenance.py noreboot
+
