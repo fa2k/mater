@@ -77,15 +77,15 @@ class feeder:
 		else:
 			return 2, "Ugyldige data"
 
-    def setAuto(self, state):
-        if state:
-            reply = self.request(feeder.ENABLE_AUTO)
-        else:
-            reply = self.request(feeder.DISABLE_AUTO)
-        if reply == "OK":
-            return 0, "OK"
-        else:
-            return 2, "Ikke OK"
+	def setAuto(self, state):
+		if state:
+			reply = self.request(feeder.ENABLE_AUTO)
+		else:
+			reply = self.request(feeder.DISABLE_AUTO)
+		if reply == "OK":
+			return 0, "OK"
+		else:
+			return 2, "Ikke OK"
 
 	def count(self):
 		reply = self.request(feeder.INCREMENT_COUNTER)
@@ -153,15 +153,15 @@ class feeder_fake:
 		else:
 			return 2, "Ugyldige data"
 
-    def setAuto(self, state):
-        if state:
-            reply = self.fakerequest(feeder.ENABLE_AUTO)
-        else:
-            reply = self.fakerequest(feeder.DISABLE_AUTO)
-        if reply == "OK":
-            return 0, "OK"
-        else:
-            return 2, "Ikke OK"
+	def setAuto(self, state):
+		if state:
+			reply = self.fakerequest(feeder.ENABLE_AUTO)
+		else:
+			reply = self.fakerequest(feeder.DISABLE_AUTO)
+		if reply == "OK":
+			return 0, "OK"
+		else:
+			return 2, "Ikke OK"
 
 	def checkin(self):
 		reply = self.fakerequest(feeder.CHECKIN_AUTO)
@@ -267,9 +267,10 @@ def feed_force():
 def count():
 	return returnStatusOp(f.count())
 
-@app.route('/auto/enable', methods=['POST'])
-def count():
-	return returnStatusOp(f.count())
+@app.route('/auto/<state>', methods=['POST'])
+def setAuto(state):
+	result = f.setAuto(True if state == "enable" else False)
+	return returnStatusOp(result)
 
 @app.route('/checkin', methods=['POST'])
 def checkin():
