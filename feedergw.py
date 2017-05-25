@@ -4,24 +4,23 @@ import time, sys, os, subprocess, psutil, serial
 from flask import jsonify, request, make_response
 app = Flask(__name__)
 
-# todamater todo
-# - lag web api: status, mating, reset
-# - lag check-in script
-# - lag php for visning av check-in og auto ip
-# - lag cron job for daglige sjekker: skype, server, checkin
-# - sett opp og test server pc programvare
-# - sett opp test av fult system
-# - fiskemater...
-# - nød-reset via fjernstyrt kontakt
 
-# etter levering
-# - koble inn IR LED + PD
-# - test seriell interface
-# - test motor og MOSFET (5V PWM)
+PING_SERVER="www.fa2k.net"
 
-# tester
-# - kill server
-# - 
+# Don't start the server unless we have Internet connection
+# We don't want to reset the Arduino by opening the serial
+# port
+for i in range(50):
+    ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", PING_SERVER], stdout=subprocess.PIPE).stdout.read()
+    if ping_response:
+        break
+    else:
+        time.sleep(2)
+else:
+    # This is called if it doesn't break
+    sys.exit(1)
+
+
 class feeder:
 	PORTIONS_CAPACITY = 14
 
