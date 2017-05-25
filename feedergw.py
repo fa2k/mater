@@ -9,9 +9,11 @@ PING_SERVER="www.fa2k.net"
 
 # Don't start the server unless we have Internet connection
 # We don't want to reset the Arduino by opening the serial
-# port
+# port unless connected, otherwise the maint. script will 
+# reboot after <=24h, and the 48h failsafe in the Arduino will 
+# never trigger.
 for i in range(50):
-    ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", PING_SERVER], stdout=subprocess.PIPE).stdout.read()
+    ping_response = subprocess.Popen(["/bin/ping", "-c1", PING_SERVER], stdout=subprocess.PIPE).stdout.read()
     if ping_response:
         break
     else:
