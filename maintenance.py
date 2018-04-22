@@ -3,11 +3,20 @@ import time, os, sys, requests, subprocess, psutil, datetime
 import socket
 
 SERVER = "http://localhost:5001/"
-SERVER_SCRIPT = "/home/poppetode/feedergw.py"
+SERVER_SCRIPT = "/home/pi/feedergw.py"
 
 #REPORT_SERVER = "http://www.fa2k.net/mater/ping.php"
 
-host = socket.gethostbyname('www.fa2k.net')
+host = None
+i = 0
+while not host:
+	try:
+		host = socket.gethostbyname('www.fa2k.net')
+	except:
+		if i > 4:
+			raise
+		time.sleep(30)
+
 REPORT_SERVER = "http://{0}/mater/ping.php".format(host)
 
 def reboot():
@@ -43,8 +52,6 @@ def ensureServerUp():
 			serv = False # determine if it's the server
 			if p.name == "python":
 				serv = len(p.cmdline) > 1 and p.cmdline[1] == SERVER_SCRIPT
-			elif p.name == "skype": # also kill skype! process may be called sk.
-				serv = True
 			if serv:
 				print "Killing ", pid
 				p.terminate()
@@ -60,26 +67,6 @@ def ensureServerUp():
 	# can't start the server on 3 tries, reboot!
 	reboot()
 	return False
-	
-
-def checkSkypeUp():
-	found = False
-	for pid in  psutil.get_pid_list():
-		p = psutil.Process(pid)
-		if p.name == "skype":
-			found = True
-			break
-	
-	if found:
-		print "Skype was running"
-	else:
-		print "Starting skype"
-		env = dict(os.environ)
-		env['DISPLAY'] = ":0"
-		try:
-			subprocess.Popen(["/usr/bin/skype"], env = env)
-		except OSError:
-			pass
 	
 
 def postReport():
@@ -105,11 +92,6 @@ def main():
 	try:
 		if ensureServerUp():
 
-			print "Server is up, making sure skype is on"
-			# ensure skype is up (not fatal if it can't be started)
-			checkSkypeUp()
-
-			
 			print "Reporting to report server"
 			# if we can't post report, maybe reboot
 			if postReport():
