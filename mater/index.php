@@ -55,22 +55,11 @@ Server:
 <input type="button" id="reset" value="Nullstill maskin" />
 <input type="button" id="restart_server" value="Restart PC" /> (ikke bruk)
 </p>
-
-<h2>Ring Poppe og Tode på Skype</h2>
-<div id="SkypeButton_Call_live:poppetode_1">
-  <script type="text/javascript">
-    Skype.ui({
-      "name": "call",
-      "element": "SkypeButton_Call_live:poppetode_1",
-      "participants": ["live:poppetode_1"],
-      "imageSize": 24
-    });
-  </script>
-</div>
-<p>
-<input type="button" id="activate_screen" value="Aktiver laptop-skjerm"/>
-<input type="button" id="restart_skype" value="Restart skype"/></p>
 </form>
+
+<h2>Video av Poppe og Tode</h2>
+<p>Video: <a href="http://<?php echo file_get_contents("ip.txt"); ?>:5003/" target="_blank">klikk her</a></p>
+
 <h2>automatisk rapportering (feilsøking)</h2>
 <table class="reporting">
 <tr><th>dato/tid</th><th>adresse</th><th>tilstand</th><th>porsjoner</th></tr>
