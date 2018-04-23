@@ -57,8 +57,8 @@ Server:
 </p>
 </form>
 
-<h2>Video av Poppe og Tode</h2>
-<p>Video: <a href="http://<?php echo file_get_contents("ip.txt"); ?>:5003/" target="_blank">klikk her</a></p>
+<h2>Webcam</h2>
+<p>Direkte video av Poppe og Tode: <a href="http://<?php echo file_get_contents("ip.txt"); ?>:5003/" target="_blank">klikk her</a></p>
 
 <h2>automatisk rapportering (feilsøking)</h2>
 <table class="reporting">
