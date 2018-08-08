@@ -1,8 +1,10 @@
-
+#include <AFMotor.h>
 #include <EEPROM.h>
 
-const int IRLED_PIN = 2, MOTOR_PIN = 3, SWITCH_PIN = 4;
-const int IRSENS_APIN = A0;
+const int SWITCH_PIN = 4, IRSENS_APIN = A0;
+
+AF_DCMotor motor(1);
+AF_DCMotor irled(2);
 
 // Protocol
 const char STATUS_REQUEST = 's', FEED = 'f', FORCE_FEED = 'F', RESET = 'r';
@@ -30,8 +32,6 @@ unsigned long lastInteraction, lastAutoFeed;
 boolean autoFeedModeActive, autoFeedEnabled;
 
 void setup() {
-  pinMode(IRLED_PIN, OUTPUT);
-  pinMode(MOTOR_PIN, OUTPUT);
   pinMode(SWITCH_PIN, INPUT);
   digitalWrite(SWITCH_PIN, HIGH); // enable pull-up  
   Serial.begin(9600);
@@ -43,6 +43,7 @@ void setup() {
 
 void loop() {
   // Check for new command
+  
   if (Serial.available() > 0) {
     byte action = Serial.read();
     byte result;
@@ -115,15 +116,15 @@ void loop() {
       }
     }
   }
-  
-  if (digitalRead(SWITCH_PIN) != switchState) {
-    feed(false);
-    switchState = !switchState;
+  if (digitalRead(SWITCH_PIN) == LOW) {
+    motor.run(BACKWARD);
+    while(digitalRead(SWITCH_PIN) == LOW) {
+      delay(10);
+    }
+    motor.run(RELEASE);
     lastInteraction = millis();
     autoFeedModeActive = false;
   }
-  
-  
 }
 
 
@@ -186,7 +187,7 @@ int dispenseNextPortion(boolean first, boolean checks) {
   int high_level = 900, half_hyst = 50;
   int i;
   
-  digitalWrite(IRLED_PIN, LOW); // should be low already
+  irled.run(RELEASE); // should be low already
   if (checks) {
     int base_level = analogRead(IRSENS_APIN);
     if (base_level > high_level - 2*half_hyst) {
@@ -195,7 +196,7 @@ int dispenseNextPortion(boolean first, boolean checks) {
   }
   
   
-  digitalWrite(IRLED_PIN, HIGH);
+  irled.run(FORWARD);
   delay(1);
   // Expect a high level of light here, as the protocol is to move the basket
   // past the light sensor when finishing the feeding.
@@ -220,7 +221,7 @@ int dispenseNextPortion(boolean first, boolean checks) {
   // case 2: LOW -> HIGH -> LOW -> HIGH (stop) --> Should give an error if not force
   
   //analogWrite(MOTOR_PIN, MOTOR_PWM);
-  digitalWrite(MOTOR_PIN, HIGH);
+  motor.run(FORWARD);
   
   const boolean states[] = {false, true, false};
   
@@ -238,8 +239,8 @@ int dispenseNextPortion(boolean first, boolean checks) {
     ok = ok && waitPhotoState(states[i], level, timeout);
   }
   
-  digitalWrite(MOTOR_PIN, LOW);
-  digitalWrite(IRLED_PIN, LOW);
+  motor.run(RELEASE);
+  irled.run(RELEASE);
   if (ok)
     return SUCCESS;
   else
