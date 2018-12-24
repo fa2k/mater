@@ -39,7 +39,8 @@ class feeder:
 	SUCCESS = 's'
 	NO_MORE_FOOD = 'o'
 	DISPENSE_FAILURE = 'd'
-	SENSOR_FAILURE = 'x'
+	SENSOR_FAILURE_TOO_BRIGHT = 'x'
+	SENSOR_FAILURE_TOO_DIM = 'y'
 
 	def __init__(self):
 		self.conn = serial.Serial(port='/dev/ttyACM0', timeout=120)
@@ -73,8 +74,10 @@ class feeder:
 			return 1, "Ingen porsjoner er tilgjengelige"
 		elif reply == feeder.DISPENSE_FAILURE:
 			return 1, "Generell matefeil"
-		elif reply == feeder.SENSOR_FAILURE:
-			return 1, "Sensorfeil"
+		elif reply == feeder.SENSOR_FAILURE_TOO_BRIGHT:
+			return 1, "Sensorfeil (for mye lys)"
+		elif reply == feeder.SENSOR_FAILURE_TOO_DIM:
+			return 1, "Sensorfeil (ikke noe lys)"
 		else:
 			return 2, "Ugyldige data"
 
