@@ -52,7 +52,7 @@ Server:
 <input type="button" id="refresh" value="Oppdater" /> 
 </p>
 <p> 
-<input type="button" id="reset" value="Nullstill maskin" />
+<input type="button" id="reset" value="Nullstill teller" />
 <input type="button" id="restart_server" value="Restart PC" /> (ikke bruk)
 </p>
 </form>
