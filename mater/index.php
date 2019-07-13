@@ -65,7 +65,7 @@ if ($ip == $client_ip) {
 </form>
 
 <h2>Webcam</h2>
-<p>Direkte video av Poppe og Tode: <a href="http://<?php echo file_get_contents("ip.txt"); ?>:5003/" target="_blank">klikk her</a></p>
+<p>Direkte video av Poppe og Tode: <a href="http://<?php echo $ip; ?>:5003/" target="_blank">klikk her</a></p>
 
 <h2>automatisk rapportering (feilsøking)</h2>
 <table class="reporting">

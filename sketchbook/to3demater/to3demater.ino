@@ -1,7 +1,7 @@
 #include <AFMotor.h>
 #include <EEPROM.h>
 
-const int SWITCH_PIN = 4, IRSENS_APIN = A0;
+const int SWITCH_PIN = A5, IRSENS_APIN = A4;
 
 AF_DCMotor motor(1);
 AF_DCMotor irled(2);
@@ -11,12 +11,16 @@ const char STATUS_REQUEST = 's', FEED = 'f', FORCE_FEED = 'F', RESET = 'r';
 const char ENABLE_AUTO = 'a', DISABLE_AUTO = 'd', CHECKIN_AUTO = 'c';
 const char INCREMENT_COUNTER = 'i';
 // Status codes from feed routine
-const int SUCCESS = 's', NO_MORE_FOOD = 'o', DISPENSE_FAILURE = 'd', SENSOR_FAILURE = 'x';
+const int SUCCESS = 's', NO_MORE_FOOD = 'o', DISPENSE_FAILURE = 'd';
+const int SENSOR_FAILURE_TOO_BRIGHT = 'x', SENSOR_FAILURE_TOO_DIM = 'y';
 
 const long COMMAND_TIMEOUT = 60000;
 
 // How much hardware
 const int N_PORTIONS = 14;
+
+// Max analog light reading
+const int MAX_READING = 1023;
 
 // Config
 const unsigned long AUTO_FEED_INITIATE_TIMEOUT = 2ul*24*3600*1000;
@@ -32,8 +36,12 @@ unsigned long lastInteraction, lastAutoFeed;
 boolean autoFeedModeActive, autoFeedEnabled;
 
 void setup() {
-  pinMode(SWITCH_PIN, INPUT);
-  digitalWrite(SWITCH_PIN, HIGH); // enable pull-up  
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(IRSENS_APIN, INPUT_PULLUP);
+  motor.run(RELEASE);
+  motor.setSpeed(255);
+  irled.run(RELEASE);
+  irled.setSpeed(255);
   Serial.begin(9600);
   switchState = digitalRead(SWITCH_PIN);
   lastInteraction = millis();
@@ -184,17 +192,18 @@ void setAutoFeed(boolean enable) {
 }
 
 int dispenseNextPortion(boolean first, boolean checks) {
-  int high_level = 900, half_hyst = 50;
+  int half_hyst = 50;
   int i;
+  
+  // Invert levels -- it's now dark when high reading
+  int base_level = MAX_READING-analogRead(IRSENS_APIN);
   
   irled.run(RELEASE); // should be low already
   if (checks) {
-    int base_level = analogRead(IRSENS_APIN);
-    if (base_level > high_level - 2*half_hyst) {
-      return SENSOR_FAILURE;
+    if (base_level > MAX_READING - 3*half_hyst) {
+      return SENSOR_FAILURE_TOO_BRIGHT;
     }
   }
-  
   
   irled.run(FORWARD);
   delay(1);
@@ -202,9 +211,9 @@ int dispenseNextPortion(boolean first, boolean checks) {
   // past the light sensor when finishing the feeding.
  
   if (checks) {
-    int high_test = analogRead(IRSENS_APIN);
-    if (high_test < high_level - 2*half_hyst) {
-      return SENSOR_FAILURE;
+    int high_test = MAX_READING-analogRead(IRSENS_APIN);
+    if (high_test < base_level + 3*half_hyst) {
+      return SENSOR_FAILURE_TOO_DIM;
     }
   }
 
@@ -230,11 +239,12 @@ int dispenseNextPortion(boolean first, boolean checks) {
     int level;
     if (states[i]) {
       // while high, require low level to continue
-      level = high_level - half_hyst;
+      level = base_level + half_hyst;
     }
     else
     {
-      level = high_level + half_hyst;
+      // Require high level
+      level = base_level + 2*half_hyst;
     }
     ok = ok && waitPhotoState(states[i], level, timeout);
   }
@@ -253,7 +263,7 @@ boolean waitPhotoState(boolean whileHigh, int conditionLevel, long timeout) {
     if (millis() > timeout) 
       return false;
     delay(1);
-    int val = analogRead(IRSENS_APIN);
+    int val = 1023-analogRead(IRSENS_APIN);
     if (whileHigh) {
       finished = val < conditionLevel;
     }
