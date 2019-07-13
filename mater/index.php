@@ -48,11 +48,18 @@
 </p>
 <p>
 Server: 
-<input type="text" id="ip" value="<?php echo file_get_contents("ip.txt") . ":5001"; ?>" />
+<?php
+$client_ip = $_SERVER['REMOTE_ADDR'];
+$ip = file_get_contents("ip.txt");
+if ($ip == $client_ip) {
+	$ip = "192.168.0.241";
+}
+?>
+<input type="text" id="ip" value="<?php echo "$ip:5001"; ?>" />
 <input type="button" id="refresh" value="Oppdater" /> 
 </p>
 <p> 
-<input type="button" id="reset" value="Nullstill maskin" />
+<input type="button" id="reset" value="Nullstill teller" />
 <input type="button" id="restart_server" value="Restart PC" /> (ikke bruk)
 </p>
 </form>
