@@ -105,13 +105,6 @@ class feeder:
 		else:
 			return 2, "Ugyldige data"
 
-	def fisk(self, id):
-		reply = self.request(str(id))
-		if reply == "OK":
-			return 0, "OK"
-		else:
-			return 2, "Ugyldige data"
-
 	def reset(self):
 		reply = self.request(feeder.RESET)
 		if reply == "OK":
@@ -201,28 +194,8 @@ class feeder_fake:
 			return "OK"
 
 
-def turnOnScreen():
-	env = dict(os.environ)
-	env['DISPLAY'] = ":0"
-	subprocess.Popen(["/usr/bin/xdotool", "key", "Ctrl"], env = env)
-
 def doReboot():
 	subprocess.Popen(["/sbin/faboot"])
-
-
-def restartSkype():
-	for pid in  psutil.get_pid_list():
-		p = psutil.Process(pid)
-		if p.name == "skype":
-			p.terminate()
-			try:
-				p.wait(timeout=3000)
-			except TimeoutExpiredException:
-				p.kill()
-	env = dict(os.environ)
-	env['DISPLAY'] = ":0"
-	subprocess.Popen(["/usr/bin/skype"], env = env)
-
 
 
 ##### main API interface ####
@@ -293,21 +266,6 @@ def server_status():
 def reboot():
 	doReboot()
 	return corsify(make_response(""))
-
-@app.route('/turn-on-screen', methods=["POST"])
-def turn_on_screen():
-	turnOnScreen()
-	return corsify(make_response(""))
-
-@app.route('/restart-skype', methods=["POST"])
-def restart_skype():
-	restartSkype()
-	return corsify(make_response(""))
-
-@app.route('/fish/<id>', methods=["POST"])
-def fish(id):
-	f.fisk(id)
-	return corsify(make_response("OK"))
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', port=5001, threaded=True)
