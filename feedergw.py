@@ -195,7 +195,7 @@ class feeder_fake:
 
 
 def doReboot():
-	subprocess.Popen(["/sbin/faboot"])
+	subprocess.Popen(["sudo", "/sbin/reboot"])
 
 
 ##### main API interface ####

@@ -1,29 +1,31 @@
 #!/usr/bin/env python
 import time, os, sys, requests, subprocess, psutil, datetime
 import socket
+import miniupnpc
 
 SERVER = "http://localhost:5001/"
 SERVER_SCRIPT = "/home/pi/feedergw.py"
 
-#REPORT_SERVER = "http://www.fa2k.net/mater/ping.php"
+REPORT_SERVER = "http://www.fa2k.net/mater/ping.php"
+REPORT_HOSTNAME = "www.fa2k.net"
 
 host = None
 i = 0
 while not host:
 	try:
-		host = socket.gethostbyname('www.fa2k.net')
+		host = socket.gethostbyname(REPORT_HOSTNAME)
 	except:
 		if i > 4:
 			raise
 		time.sleep(30)
+		i += 1
 
-REPORT_SERVER = "http://{0}/mater/ping.php".format(host)
 
 def reboot():
 	if len(sys.argv) != 2 or sys.argv[1] != "noreboot":
 		print "Rebooting"
 		try:
-			subprocess.call(["/sbin/faboot"])
+			subprocess.call(["sudo", "/sbin/reboot"])
 			pass
 		except OSError:
 			print "Shit deep like the Mariana Trench"
@@ -69,20 +71,42 @@ def ensureServerUp():
 	return False
 	
 
-def postReport():
+def postReportGetPublicIp():
 	# get status
 	try:
 		rs = requests.get(SERVER+"status")
 		if rs.status_code == 200:
 			print "Got a good reply from local server, forwarding it"
-			h = {"Content-type": "application/json", "Host": "www.fa2k.net"}
+			h = {"Content-type": "application/json", "Host": REPORT_HOSTNAME}
 			rr = requests.post(REPORT_SERVER, data=rs.text, headers=h)
-			if rr.status_code == 200 and rr.text == "OK\n":
-				print "Successfully sent report"
-				return True
+			if rr.status_code == 200:
+				print "Successfully sent report, and received our IP,", rr.text.strip()
+				return rr.text
 	except requests.exceptions.RequestException:
 		pass
 	return False
+
+
+def checkPortForwarding(publicIp):
+	try:
+		rs = requests.get("http://{}:5001/status".format(publicIp))
+		if rs.status_code == 200:
+			print "Got a good reply from local server through forwarded port."
+			return True
+	except requests.exceptions.RequestException:
+		pass
+	print "Port forwarding is not working."
+	return False
+
+
+def fixPortForwarding():
+	upnp = miniupnpc.UPnP()
+	upnp.discoverdelay = 10
+	upnp.discover()
+	upnp.selectigd()
+	print "Adding port forwarding for ports 5001 & 5003 to", upnp.lanaddr, "..."
+	upnp.addportmapping(5001, 'TCP', upnp.lanaddr, 5001, 'Mater', '')
+	upnp.addportmapping(5003, 'TCP', upnp.lanaddr, 5003, 'Mater-video', '')
 
 
 def main():
@@ -94,13 +118,17 @@ def main():
 
 			print "Reporting to report server"
 			# if we can't post report, maybe reboot
-			if postReport():
+			public_ip = postReportGetPublicIp()
+			if public_ip:
+				if not checkPortForwarding(public_ip):
+					print "Fixing port forwarding with UPnP..."
+					fixPortForwarding()
 				print "Finished, all good"
 			else:
 				print "Report failure, maybe a reboot will help"
 				reboot()
-	except:
-		print "Exception, rebooting"
+	except Exception as e:
+		print "Exception {}, rebooting".format(e)
 		reboot()
 
  

@@ -43,4 +43,5 @@ if ($jsondata) {
 	}
 	fclose($fr);
 }
-?>OK
+print ("$ip")
+?>
